@@ -20,9 +20,10 @@ design call, the same way its counterpart in the SDK works. If a change
 would contradict a stated goal or settle an open question, update
 `GOALS.md` in the same change.
 
-**Early scaffold.** Six resources are wired up (`clients`, `invoices`,
-`quotes`, `payments`, `products`, `expenses`) out of ~34; `clients` was the
-template the other five followed. See "Adding a resource" below before
+**Early scaffold.** Eleven resources are wired up (`clients`, `invoices`,
+`quotes`, `credits`, `payments`, `products`, `expenses`, `projects`,
+`tasks`, `vendors`, `purchase_orders`) out of ~34; `clients` was the
+template the other ten followed. See "Adding a resource" below before
 writing the next one.
 
 ## Development environment

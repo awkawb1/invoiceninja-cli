@@ -12,14 +12,15 @@ command line.
 
 ### Added
 
-- Six resources, each with `list` (with `--all` for every page, `--status`,
-  and `--param key=value` for anything `ListParams` doesn't have a typed
-  setter for), `get`, `create`, `update`, and `delete`: `clients`,
-  `invoices`, `quotes`, `payments`, `products`, `expenses`. `quotes` is
-  `invoices` under a different endpoint — Invoice Ninja stores both in the
-  same table, distinguished by `entity_type`, so `Quote` is a type alias for
-  `Invoice` in the SDK and `commands/quotes.rs` is otherwise identical to
-  `commands/invoices.rs`.
+- Eleven resources, each with `list` (with `--all` for every page,
+  `--status`, and `--param key=value` for anything `ListParams` doesn't have
+  a typed setter for), `get`, `create`, `update`, and `delete`: `clients`,
+  `invoices`, `quotes`, `credits`, `payments`, `products`, `expenses`,
+  `projects`, `tasks`, `vendors`, `purchase-orders`. `quotes` and `credits`
+  are `invoices` under different endpoints — Invoice Ninja stores all three
+  in the same table, distinguished by `entity_type`, so `Quote` and `Credit`
+  are type aliases for `Invoice` in the SDK and `commands/quotes.rs` /
+  `commands/credits.rs` are otherwise identical to `commands/invoices.rs`.
 - `update` fetches the current record, shallow-merges the caller's
   `--data`/`--file` JSON on top, and writes the merged result back, rather
   than sending the patch alone — Invoice Ninja's `PUT` is a full replace.

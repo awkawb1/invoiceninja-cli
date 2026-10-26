@@ -45,9 +45,9 @@ pub enum OutputFormat {
     Json,
 }
 
-/// One variant per resource. Six are wired up so far (`clients` was the
+/// One variant per resource. Eleven are wired up so far (`clients` was the
 /// template for the rest); see CLAUDE.md's "Adding a resource" for the
-/// remaining ~28.
+/// remaining ~23.
 #[derive(Subcommand)]
 pub enum Command {
     /// Manage clients
@@ -56,12 +56,22 @@ pub enum Command {
     Invoices(ResourceArgs),
     /// Manage quotes
     Quotes(ResourceArgs),
+    /// Manage credits
+    Credits(ResourceArgs),
     /// Manage payments
     Payments(ResourceArgs),
     /// Manage products
     Products(ResourceArgs),
     /// Manage expenses
     Expenses(ResourceArgs),
+    /// Manage projects
+    Projects(ResourceArgs),
+    /// Manage tasks
+    Tasks(ResourceArgs),
+    /// Manage vendors
+    Vendors(ResourceArgs),
+    /// Manage purchase orders
+    PurchaseOrders(ResourceArgs),
 }
 
 #[derive(Args)]

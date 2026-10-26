@@ -1,6 +1,11 @@
 pub mod clients;
+pub mod credits;
 pub mod expenses;
 pub mod invoices;
 pub mod payments;
 pub mod products;
+pub mod projects;
+pub mod purchase_orders;
 pub mod quotes;
+pub mod tasks;
+pub mod vendors;

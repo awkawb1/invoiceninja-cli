@@ -24,8 +24,15 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         Command::Clients(args) => commands::clients::run(&client, args, cli.output).await,
         Command::Invoices(args) => commands::invoices::run(&client, args, cli.output).await,
         Command::Quotes(args) => commands::quotes::run(&client, args, cli.output).await,
+        Command::Credits(args) => commands::credits::run(&client, args, cli.output).await,
         Command::Payments(args) => commands::payments::run(&client, args, cli.output).await,
         Command::Products(args) => commands::products::run(&client, args, cli.output).await,
         Command::Expenses(args) => commands::expenses::run(&client, args, cli.output).await,
+        Command::Projects(args) => commands::projects::run(&client, args, cli.output).await,
+        Command::Tasks(args) => commands::tasks::run(&client, args, cli.output).await,
+        Command::Vendors(args) => commands::vendors::run(&client, args, cli.output).await,
+        Command::PurchaseOrders(args) => {
+            commands::purchase_orders::run(&client, args, cli.output).await
+        }
     }
 }
