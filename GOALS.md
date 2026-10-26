@@ -67,6 +67,16 @@ the SDK doesn't already consider safe. If the SDK decides `POST` isn't
 replayed on a 5xx because it might double-create an invoice, that reasoning
 applies here unchanged — the CLI is not a place to relax it for convenience.
 
+### 6. CI mirrors the SDK's, job for job
+
+`.github/workflows/ci.yml` has the same three jobs as `invoiceninjars-sdk`'s
+own — pinned-toolchain `test`, build-only `msrv` on the declared floor, and
+an advisory `stable` that reports red but stays out of required status
+checks — rather than inventing a different shape for this crate. See
+`CLAUDE.md`'s "Rust version and CI" for the per-job reasoning; a deviation
+from this shape should be written down there the same way `update`'s
+exception is written down in goal 1.
+
 ## Non-goals
 
 - **No Cargo workspace with the SDK.** Explained in `CLAUDE.md`: the SDK is
@@ -111,12 +121,6 @@ These are genuinely undecided; deciding one is a change to this file.
   `--param key=value` for the rest. A per-resource convenience filter (e.g.
   a `--unpaid` shorthand for `client_status=unpaid`) would read nicer but
   means hand-picking which filters earn a dedicated flag per resource.
-- **Whether this crate gets its own CI.** No longer blocked on needing a
-  sibling checkout — the SDK dependency switched from a path to a crates.io
-  version requirement (`invoiceninja-sdk = "0.2.0"`) once 0.2.0 was published
-  on 2026-10-25. A workflow here can now just `cargo build` against the
-  registry like any other Rust project; it doesn't need to check out
-  `invoiceninjars-sdk` at all.
 - **Whether the Nix packaging goes further than this repo's own flake.**
   `flake.nix` now has `packages.default`/`devShells.default` (built with a
   pinned `rust-overlay` toolchain, for parity between `nix build` and

@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Mondays 06:00 UTC. A new Rust release lands on its own schedule, so
+    # without this the advisory `stable` job below only runs when someone
+    # happens to push, and breakage can sit unnoticed for weeks.
+    - cron: '0 6 * * 1'
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # Nothing it covers can change on a timer: the toolchain is pinned and
+    # the dependencies are locked. The weekly run is for `stable` only.
+    if: github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      # Pinned, and kept in step with `devVersion` in flake.nix (which in
+      # turn tracks invoiceninja-sdk's own `devVersion`), so CI and the dev
+      # shell agree and a new stable release cannot turn a lint failure
+      # into an unrelated red build.
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with:
+          components: rustfmt, clippy
+      - run: cargo build --all-targets
+      - run: cargo test
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+
+  msrv:
+    name: Build on the declared MSRV
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      # Must match `rust-version` in Cargo.toml, which in turn is pinned to
+      # invoiceninja-sdk's own MSRV (see the comment there). Build only —
+      # lint and format output varies by release, and pinning those to the
+      # oldest supported toolchain is not useful.
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - run: cargo test
+
+  stable:
+    name: Latest stable (advisory)
+    runs-on: ubuntu-latest
+    # Deliberately NOT `continue-on-error`: a failure here should render as
+    # a real red X, not a green check with an annotation nobody reads.
+    #
+    # This job is advisory all the same — it tracks a moving toolchain, so a
+    # new clippy lint can break it through no fault of the change under
+    # test. **Keep it out of the required status checks** in branch
+    # protection; that, rather than a flag in this file, is what stops it
+    # blocking merges. Expect it red sometimes, and fix it when bumping
+    # `devVersion`.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: cargo test
+      - run: cargo clippy --all-targets -- -D warnings

@@ -71,6 +71,43 @@ matching package named `invoiceninja-sdk` found" or an unresolved
 `../invoiceninjars-sdk/Cargo.toml`'s `[package] name`, if you have a
 checkout) first.
 
+### Rust version and CI
+
+| | Version | Declared in |
+| --- | --- | --- |
+| Dev toolchain | 1.99.1 | `devVersion` in `flake.nix`, `test` job in `.github/workflows/ci.yml` |
+| MSRV | 1.88 | `rust-version` in `Cargo.toml` (inherited from the SDK's own floor — see the comment there), `msrv` job in `ci.yml` |
+
+Unlike `invoiceninjars-sdk`'s `flake.nix`, this crate's has no separate
+`msrvVersion`/toolchain — the `msrv` CI job is the only place 1.88 actually
+gets built against, not a Nix devShell. If that ever earns its keep, mirror
+the SDK's `msrvToolchain`/`shellFor` pattern rather than inventing a new one.
+
+CI runs on GitHub Actions, against the GitHub push mirror (Gitea is
+canonical — see `.gitea`/remote config — but Actions run on GitHub, the
+same arrangement as `invoiceninjars-sdk`'s own CI). Three jobs, mirroring
+the SDK's `ci.yml` job-for-job:
+
+- **`test`** — the pinned dev toolchain; `cargo build --all-targets`,
+  `cargo test`, `cargo fmt --check`, `cargo clippy --all-targets -- -D
+  warnings`.
+- **`msrv`** — build and test only, on the declared 1.88 floor. No lint or
+  format check: those vary by release, and pinning them to the oldest
+  supported toolchain isn't useful.
+- **`stable`** (advisory) — latest stable `rustc`, runs on push/PR and
+  weekly via `schedule` (Mondays 06:00 UTC) so a new Rust release that
+  breaks the build or fires a new clippy lint doesn't sit unnoticed for
+  weeks between pushes. Deliberately **not** `continue-on-error` — a real
+  red X, not a silent annotation — so if branch protection ever requires
+  status checks, keep `stable` **out** of the required list; that setting,
+  not anything in `ci.yml`, is what should stop it blocking merges. Expect
+  it red occasionally through no fault of the change under test, and fix it
+  when bumping `devVersion`.
+
+The `test` and `msrv` jobs skip scheduled runs (`if: github.event_name !=
+'schedule'`) — a pinned toolchain against a locked dependency graph can't
+change on a timer, so the weekly run is for `stable` only.
+
 ## Common commands
 
 ```sh
