@@ -1,0 +1,14 @@
+# Copy this file to `.cargo/config.toml` (gitignored, so this stays
+# per-developer) to build against a local `../invoiceninjars-sdk` checkout
+# instead of the published crates.io release of `invoiceninja-sdk`. Useful
+# for testing an SDK change here before it's published.
+#
+# Cargo's `paths` override requires the local checkout's `[package] version`
+# in its Cargo.toml to match the version requirement in this crate's
+# Cargo.toml (currently "0.2.0") — if you bump the SDK's version locally
+# while working on the next release, this override stops matching until
+# this crate's `Cargo.toml` is bumped to match (or the SDK version is reset).
+#
+# Delete `.cargo/config.toml` (or just this line) to go back to the
+# published version.
+paths = ["../invoiceninjars-sdk"]

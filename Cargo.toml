@@ -1,0 +1,26 @@
+[package]
+name = "invoiceninja-cli"
+version = "0.1.0"
+edition = "2021"
+# Matches the SDK's own MSRV. clap 4.6.7 declares 1.85 (see GOALS.md in
+# invoiceninjars-sdk), which is under this, so the SDK's floor is still the
+# binding one. Recheck both together if either dependency tree moves.
+rust-version = "1.88"
+description = "A command-line client for the Invoice Ninja v5 API, built on invoiceninja-sdk"
+license = "MIT"
+# Slugs checked against https://crates.io/api/v1/category_slugs, same as
+# invoiceninja-sdk's own Cargo.toml.
+categories = ["command-line-utilities"]
+keywords = ["invoiceninja", "invoicing", "billing", "cli"]
+
+[dependencies]
+# Published on crates.io as of 0.2.0 (2026-10-25); no longer a path
+# dependency on a sibling checkout. Pre-1.0, a y-bump (0.2.x -> 0.3.0) is a
+# breaking release per that crate's own GOALS.md, so stick with the default
+# caret requirement rather than widening it — it already blocks that
+# automatically while still taking 0.2.x patch releases.
+invoiceninja-sdk = "0.2.0"
+clap = { version = "4", features = ["derive", "env"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
