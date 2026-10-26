@@ -45,9 +45,10 @@ pub enum OutputFormat {
     Json,
 }
 
-/// One variant per resource. Eleven are wired up so far (`clients` was the
-/// template for the rest); see CLAUDE.md's "Adding a resource" for the
-/// remaining ~23.
+/// One variant per resource. Every resource that fits the simple CRUD
+/// template (`resource_methods!`/`crud_methods!` in the SDK) is wired up;
+/// see CLAUDE.md's "Adding a resource" for what's deliberately left out
+/// (bulk actions, uploads, entity actions, non-CRUD endpoints).
 #[derive(Subcommand)]
 pub enum Command {
     /// Manage clients
@@ -72,6 +73,50 @@ pub enum Command {
     Vendors(ResourceArgs),
     /// Manage purchase orders
     PurchaseOrders(ResourceArgs),
+    /// Manage recurring invoices
+    RecurringInvoices(ResourceArgs),
+    /// Manage recurring quotes
+    RecurringQuotes(ResourceArgs),
+    /// Manage recurring expenses
+    RecurringExpenses(ResourceArgs),
+    /// Manage tax rates
+    TaxRates(ResourceArgs),
+    /// Manage expense categories
+    ExpenseCategories(ResourceArgs),
+    /// Manage task statuses
+    TaskStatuses(ResourceArgs),
+    /// Manage payment terms
+    PaymentTerms(ResourceArgs),
+    /// Manage subscriptions
+    Subscriptions(ResourceArgs),
+    /// Manage bank transactions
+    BankTransactions(ResourceArgs),
+    /// Manage webhooks
+    Webhooks(ResourceArgs),
+    /// Manage bank integrations
+    BankIntegrations(ResourceArgs),
+    /// Manage bank transaction rules
+    BankTransactionRules(ResourceArgs),
+    /// Manage company gateways
+    CompanyGateways(ResourceArgs),
+    /// Manage designs
+    Designs(ResourceArgs),
+    /// Manage group settings
+    GroupSettings(ResourceArgs),
+    /// Manage locations
+    Locations(ResourceArgs),
+    /// Manage tags
+    Tags(ResourceArgs),
+    /// Manage task schedulers
+    TaskSchedulers(ResourceArgs),
+    /// Manage API tokens
+    Tokens(ResourceArgs),
+    /// Manage client gateway tokens
+    ClientGatewayTokens(ResourceArgs),
+    /// Manage companies
+    Companies(ResourceArgs),
+    /// Manage system logs
+    SystemLogs(ResourceArgs),
 }
 
 #[derive(Args)]

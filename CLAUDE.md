@@ -20,11 +20,12 @@ design call, the same way its counterpart in the SDK works. If a change
 would contradict a stated goal or settle an open question, update
 `GOALS.md` in the same change.
 
-**Early scaffold.** Eleven resources are wired up (`clients`, `invoices`,
-`quotes`, `credits`, `payments`, `products`, `expenses`, `projects`,
-`tasks`, `vendors`, `purchase_orders`) out of ~34; `clients` was the
-template the other ten followed. See "Adding a resource" below before
-writing the next one.
+**Scaffold status.** Every resource that fits the simple CRUD template
+(`resource_methods!`/`crud_methods!` in the SDK — list/get/create/update/
+delete, no bulk/uploads/entity-actions) is wired up, 33 in total; `clients`
+was the template the rest followed. See "Adding a resource" below for what
+a resource needing more than the template (bulk actions, uploads, entity
+actions, non-CRUD endpoints) will need beyond this.
 
 ## Development environment
 
@@ -144,8 +145,9 @@ SDK call.
 - `src/output.rs` — `print_json`, shared by every resource's `--output
   json`. Table rendering is **not** here; it's per-resource (see below),
   since there's no generic notion of which columns matter.
-- `src/commands/clients.rs` — the one resource implemented so far, and the
-  template for the rest.
+- `src/commands/clients.rs` — the first resource implemented, and the
+  template every other `src/commands/<resource>.rs` follows (33 of them now;
+  see "Adding a resource" below).
 
 ### The `update` fetch-merge-write pattern
 

@@ -12,15 +12,18 @@ command line.
 
 ### Added
 
-- Eleven resources, each with `list` (with `--all` for every page,
-  `--status`, and `--param key=value` for anything `ListParams` doesn't have
-  a typed setter for), `get`, `create`, `update`, and `delete`: `clients`,
-  `invoices`, `quotes`, `credits`, `payments`, `products`, `expenses`,
-  `projects`, `tasks`, `vendors`, `purchase-orders`. `quotes` and `credits`
-  are `invoices` under different endpoints — Invoice Ninja stores all three
-  in the same table, distinguished by `entity_type`, so `Quote` and `Credit`
-  are type aliases for `Invoice` in the SDK and `commands/quotes.rs` /
-  `commands/credits.rs` are otherwise identical to `commands/invoices.rs`.
+- 33 resources, every one of them with a simple `list`/`get`/`create`/
+  `update`/`delete` API in the SDK (`resource_methods!`/`crud_methods!`, no
+  bulk/uploads/entity-actions) — see `invoiceninja-cli --help` for the
+  full list. `list` takes `--all` for every page, `--status`, and
+  `--param key=value` for anything `ListParams` doesn't have a typed
+  setter for. `quotes` and `credits` are `invoices` under different
+  endpoints — Invoice Ninja stores all three in the same table,
+  distinguished by `entity_type`, so `Quote` and `Credit` are type aliases
+  for `Invoice` in the SDK and `commands/quotes.rs`/`commands/credits.rs`
+  are otherwise identical to `commands/invoices.rs`. Likewise
+  `recurring_quotes`/`RecurringQuote` mirror `recurring_invoices`/
+  `RecurringInvoice`.
 - `update` fetches the current record, shallow-merges the caller's
   `--data`/`--file` JSON on top, and writes the merged result back, rather
   than sending the patch alone — Invoice Ninja's `PUT` is a full replace.
