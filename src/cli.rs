@@ -54,11 +54,11 @@ pub enum Command {
     /// Manage clients
     Clients(ResourceArgs),
     /// Manage invoices
-    Invoices(ResourceArgs),
+    Invoices(EntityResourceArgs),
     /// Manage quotes
-    Quotes(ResourceArgs),
+    Quotes(EntityResourceArgs),
     /// Manage credits
-    Credits(ResourceArgs),
+    Credits(EntityResourceArgs),
     /// Manage payments
     Payments(ResourceArgs),
     /// Manage products
@@ -72,7 +72,7 @@ pub enum Command {
     /// Manage vendors
     Vendors(ResourceArgs),
     /// Manage purchase orders
-    PurchaseOrders(ResourceArgs),
+    PurchaseOrders(EntityResourceArgs),
     /// Manage recurring invoices
     RecurringInvoices(ResourceArgs),
     /// Manage recurring quotes
@@ -147,6 +147,61 @@ pub enum Action {
     },
     /// Delete (soft-delete) a record by id
     Delete { id: String },
+}
+
+/// Like `ResourceArgs`, but for the four resources with an entity-action
+/// route (`invoices`, `quotes`, `credits`, `purchase_orders` — the SDK's
+/// `entity_action_methods!`): adds `action` and `download`.
+#[derive(Args)]
+pub struct EntityResourceArgs {
+    #[command(subcommand)]
+    pub action: EntityAction,
+}
+
+/// `Action` plus the two entity-action-route subcommands. Duplicates
+/// `Action`'s five variants rather than extending it, since Rust enums
+/// don't compose that way and every resource's `run` match on `Action`
+/// needs to stay exhaustive without a catch-all arm for variants it
+/// doesn't support.
+#[derive(Subcommand)]
+pub enum EntityAction {
+    /// List records (one page by default; pass --all to follow pagination)
+    List(ListArgs),
+    /// Fetch one record by id
+    Get { id: String },
+    /// Create a record from a JSON body
+    Create(BodyArgs),
+    /// Update a record from a JSON body, keeping fields you don't mention.
+    Update {
+        id: String,
+        #[command(flatten)]
+        body: BodyArgs,
+    },
+    /// Delete (soft-delete) a record by id
+    Delete { id: String },
+    /// Perform an entity action, returning the updated record.
+    ///
+    /// Known to work (returns the entity): auto_bill, clone_to_invoice,
+    /// clone_to_quote, mark_paid, mark_sent, archive, restore, delete (same
+    /// effect as the `delete` subcommand, just routed differently). Three
+    /// others on this route do *not* work here and will fail to decode:
+    /// `download` (use the `download` subcommand instead),
+    /// `convert_to_purchase_order` (not wrapped by the SDK yet), and
+    /// `history`/`delivery_note`/`cancel` (Invoice Ninja answers those with
+    /// an empty body, not the record).
+    Action { id: String, action: String },
+    /// Download the rendered PDF for one or more records, to stdout unless
+    /// `--output` is given.
+    ///
+    /// With more than one id, Invoice Ninja streams a single PDF covering
+    /// all of them (the bulk `download` action) rather than one per id.
+    Download {
+        ids: Vec<String>,
+        /// Not `--output`: that's the global table/json flag, and clap
+        /// cannot have two differently-typed args share that identifier.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
 }
 
 /// Mirrors the parameters every `ListParams` accepts in the SDK — see

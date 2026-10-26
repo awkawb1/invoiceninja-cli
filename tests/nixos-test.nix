@@ -68,7 +68,7 @@ pkgs.testers.nixosTest {
         assert updated["city"] == "Springfield", f"city not updated: {updated}"
         assert updated["name"] == "CLI Test Client", f"update blanked a field it wasn't told about: {updated}"
 
-    with subtest("invoiceninja-cli can create an invoice against that client and see it in a payment"):
+    with subtest("invoiceninja-cli can create an invoice against that client"):
         invoice_out = cli(
             machine, token, "invoices", "create", "--data",
             json.dumps({
@@ -79,6 +79,23 @@ pkgs.testers.nixosTest {
         invoice = json.loads(invoice_out)[0]
         assert invoice["amount"] == 100, f"unexpected invoice amount: {invoice}"
 
+    with subtest("invoiceninja-cli action marks the invoice sent, and download fetches a PDF"):
+        # Must run before the invoice is paid below: mark_sent on an
+        # already-paid invoice does not revert its status (status_id stays
+        # 4/paid, not 2/sent) - confirmed by this test failing that way
+        # the first time it was written in this order.
+        action_out = cli(machine, token, "invoices", "action", invoice["id"], "mark_sent")
+        acted = json.loads(action_out)[0]
+        assert acted["status_id"] == "2", f"mark_sent did not update status_id: {acted}"
+
+        machine.succeed(
+            f"IN_API_TOKEN={token} IN_BASE_URL=http://localhost/api/v1 "
+            f"invoiceninja-cli invoices download {invoice['id']} --out /tmp/invoice.pdf"
+        )
+        magic_bytes = machine.succeed("head -c 4 /tmp/invoice.pdf")
+        assert magic_bytes == "%PDF", f"expected a PDF, got: {magic_bytes!r}"
+
+    with subtest("invoiceninja-cli can pay the invoice in full"):
         payment_out = cli(
             machine, token, "payments", "create", "--data",
             json.dumps({

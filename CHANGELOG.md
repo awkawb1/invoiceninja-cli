@@ -43,3 +43,13 @@ command line.
 - CI on GitHub Actions, mirroring `invoiceninja-sdk`'s own `ci.yml`: a
   pinned-toolchain `test` job, a build-only `msrv` job on the declared 1.88
   floor, and an advisory `stable` job.
+- `nixosConfigurations.invoiceninja-test-nginx`/`-caddy` (re-exported from
+  `invoiceninja-nixos`) and an automated `checks.invoiceninja-cli` nixosTest
+  that boots a real Invoice Ninja instance and runs this CLI's own binary
+  against it. See `CLAUDE.md`'s "Testing against a real server".
+- `invoices`/`quotes`/`credits`/`purchase-orders` gain `action <id>
+  <action>` (entity actions — `mark_sent`, `mark_paid`, `archive`,
+  `restore`, `clone_to_invoice`, `clone_to_quote`, `auto_bill`, `delete`)
+  and `download <id>...` (the rendered PDF, to stdout or `--out <path>`;
+  more than one id streams a single merged PDF). These four are the only
+  resources with the SDK's `entity_action_methods!` route.

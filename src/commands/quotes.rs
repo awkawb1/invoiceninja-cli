@@ -4,24 +4,29 @@
 //! an `entity_type`), so this module is otherwise identical to
 //! `invoices.rs` apart from which SDK methods and CLI subcommand it wires up.
 
+use std::io::Write;
+use std::path::PathBuf;
+
 use invoiceninja_sdk::models::{ListParams, Quote};
 use invoiceninja_sdk::InvoiceNinjaClient;
 
 use crate::body;
-use crate::cli::{Action, BodyArgs, ListArgs, OutputFormat, ResourceArgs};
+use crate::cli::{BodyArgs, EntityAction, EntityResourceArgs, ListArgs, OutputFormat};
 use crate::output;
 
 pub async fn run(
     client: &InvoiceNinjaClient,
-    args: ResourceArgs,
+    args: EntityResourceArgs,
     format: OutputFormat,
 ) -> Result<(), Box<dyn std::error::Error>> {
     match args.action {
-        Action::List(list_args) => list(client, list_args, format).await,
-        Action::Get { id } => get(client, &id, format).await,
-        Action::Create(body_args) => create(client, body_args, format).await,
-        Action::Update { id, body } => update(client, &id, body, format).await,
-        Action::Delete { id } => delete(client, &id).await,
+        EntityAction::List(list_args) => list(client, list_args, format).await,
+        EntityAction::Get { id } => get(client, &id, format).await,
+        EntityAction::Create(body_args) => create(client, body_args, format).await,
+        EntityAction::Update { id, body } => update(client, &id, body, format).await,
+        EntityAction::Delete { id } => delete(client, &id).await,
+        EntityAction::Action { id, action } => do_action(client, &id, &action, format).await,
+        EntityAction::Download { ids, out } => download(client, &ids, out).await,
     }
 }
 
@@ -99,6 +104,33 @@ async fn update(
 async fn delete(client: &InvoiceNinjaClient, id: &str) -> Result<(), Box<dyn std::error::Error>> {
     client.delete_quote(id).await?;
     println!("deleted {id}");
+    Ok(())
+}
+
+async fn do_action(
+    client: &InvoiceNinjaClient,
+    id: &str,
+    action: &str,
+    format: OutputFormat,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let updated = client.quote_action(id, action).await?;
+    render(std::slice::from_ref(&updated), format)
+}
+
+async fn download(
+    client: &InvoiceNinjaClient,
+    ids: &[String],
+    out: Option<PathBuf>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let bytes = if ids.len() == 1 {
+        client.download_quote(&ids[0]).await?
+    } else {
+        client.download_quotes(ids).await?
+    };
+    match out {
+        Some(path) => std::fs::write(path, bytes)?,
+        None => std::io::stdout().write_all(&bytes)?,
+    }
     Ok(())
 }
 

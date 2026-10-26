@@ -242,6 +242,22 @@ Each resource beyond `clients` should follow the same shape:
    either way; that's a separate addition.
 
 Resources with entity actions, document uploads, or non-CRUD endpoints
-(reports, charts, search, statics, PDF downloads, …) will need more than
-this template once they're added — the SDK's own `CLAUDE.md` describes which
-resources have which extras.
+(reports, charts, search, statics, …) will need more than this template
+once they're added — the SDK's own `CLAUDE.md` describes which resources
+have which extras.
+
+**Entity actions and PDF download are done** for the four resources that
+have the SDK's `entity_action_methods!` route (`invoices`, `quotes`,
+`credits`, `purchase_orders`): `EntityResourceArgs`/`EntityAction` in
+`src/cli.rs` is a second, parallel `ResourceArgs`/`Action` that adds
+`action <id> <action>` and `download <id>... [--out <path>]`. It
+duplicates `Action`'s five base variants rather than extending it — Rust
+enums don't compose, and every resource's `run` match on `Action` needs to
+stay exhaustive without a catch-all arm for variants it doesn't support.
+If a fifth resource ever gains this route, give it `EntityResourceArgs`
+too rather than writing a third near-duplicate enum.
+
+Still not done: bulk actions (`bulk_<resource>` — GOALS.md's open question
+on this covers why a plain pass-through isn't obviously right for bulk
+`delete`), document uploads (`upload_<resource>`), and the one-off
+non-CRUD endpoints (`statics`, `search`, `report`, `download_document`).
