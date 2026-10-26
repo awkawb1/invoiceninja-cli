@@ -45,13 +45,23 @@ pub enum OutputFormat {
     Json,
 }
 
-/// One variant per resource. Only `clients` is wired up so far; it's the
-/// template for adding the rest of the SDK's ~34 resources the same way —
-/// see CLAUDE.md.
+/// One variant per resource. Six are wired up so far (`clients` was the
+/// template for the rest); see CLAUDE.md's "Adding a resource" for the
+/// remaining ~28.
 #[derive(Subcommand)]
 pub enum Command {
     /// Manage clients
     Clients(ResourceArgs),
+    /// Manage invoices
+    Invoices(ResourceArgs),
+    /// Manage quotes
+    Quotes(ResourceArgs),
+    /// Manage payments
+    Payments(ResourceArgs),
+    /// Manage products
+    Products(ResourceArgs),
+    /// Manage expenses
+    Expenses(ResourceArgs),
 }
 
 #[derive(Args)]

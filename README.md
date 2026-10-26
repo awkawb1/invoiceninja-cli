@@ -3,9 +3,10 @@
 A command-line client for the [Invoice Ninja](https://www.invoiceninja.com/)
 v5 API, built on [`invoiceninja-sdk`](https://crates.io/crates/invoiceninja-sdk).
 
-> **Early scaffold.** Only the `clients` resource is wired up so far, as the
-> template for adding the rest — see `CLAUDE.md` for the pattern.
-> [`GOALS.md`](GOALS.md) covers what the crate is for and what it is not.
+> **Early scaffold.** `clients`, `invoices`, `quotes`, `payments`, `products`,
+> and `expenses` are wired up so far, out of ~34 resources — see `CLAUDE.md`
+> for the pattern the rest follow. [`GOALS.md`](GOALS.md) covers what the
+> crate is for and what it is not.
 
 ## Development
 
@@ -46,3 +47,8 @@ table view's few key columns:
 ```sh
 invoiceninja-cli --output json clients get <id>
 ```
+
+Every other wired-up resource (`invoices`, `quotes`, `payments`, `products`,
+`expenses`) follows the same `list`/`get`/`create`/`update`/`delete` shape,
+e.g. `invoiceninja-cli invoices list --status active` or
+`invoiceninja-cli payments get <id>`.

@@ -95,9 +95,11 @@ exception is written down in goal 1.
   invocation. See the open question below on multi-account profiles before
   assuming this is permanent.
 - **No stability promise before 1.0.** Same posture as the SDK: flags are a
-  compatibility surface too, and pre-1.0 they can change. Record breaking
-  changes somewhere legible (a `CHANGELOG.md`, once there's enough history to
-  need one) rather than letting them be discovered at the command line.
+  compatibility surface too, and pre-1.0 they can change. `CHANGELOG.md`
+  records breaking changes rather than letting them be discovered at the
+  command line — keep its `[Unreleased]` section current as changes land,
+  and move it to a dated, versioned section at the same time `Cargo.toml`'s
+  version bumps, not after.
 
 ## Open questions
 
