@@ -5,3 +5,6 @@
 /.cargo/config.toml
 /result
 /result-*
+# The test VM's disk image — created in the invocation directory by
+# run-nixos-vm (see CLAUDE.md's "Testing against a real server").
+/nixos.qcow2

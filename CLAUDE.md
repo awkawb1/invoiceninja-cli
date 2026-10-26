@@ -112,6 +112,55 @@ The `test` and `msrv` jobs skip scheduled runs (`if: github.event_name !=
 'schedule'`) — a pinned toolchain against a locked dependency graph can't
 change on a timer, so the weekly run is for `stable` only.
 
+### Testing against a real server
+
+`flake.nix` has an `invoiceninja-nixos` input (Gitea, same host as this
+repo's own remote) and re-exports two of its `nixosConfigurations` as
+`invoiceninja-test-nginx`/`invoiceninja-test-caddy` — real NixOS VMs
+running actual Invoice Ninja (PHP/Laravel + MariaDB + Redis + chromium for
+PDF generation), not a mock. Reused as-is rather than redefined here, same
+principle as this crate being a client of the SDK rather than a second
+implementation of it — see that repo's own `CLAUDE.md` for what's actually
+inside.
+
+```sh
+nix build --accept-flake-config '.#nixosConfigurations.invoiceninja-test-nginx.config.system.build.vm'
+QEMU_NET_OPTS="hostfwd=tcp::8080-:80" ./result/bin/run-nixos-vm
+```
+
+`--accept-flake-config` is what lets the `nixConfig` cachix substituter
+declared at the top of this file actually get used — without it (or if the
+daemon's `trusted-users` rejects it anyway, which it did when scripted
+through an agent sandbox in practice — built fine regardless, just slower)
+Nix silently falls back to building from source. `QEMU_NET_OPTS` forwards
+the guest's port 80 to host `8080`; it's a runtime flag to the generated
+`run-nixos-vm` script, not baked into the VM config, so it has to be set on
+every boot.
+
+The VM has one fixed admin account baked in by the upstream repo's own test
+fixtures (`admin@email.com` / `password`, from its `tests/invoice_ninja_test_password`) —
+not meant to be secret, since it only ever exists inside a throwaway local
+VM. There's no standing API token to copy anywhere; get one fresh each boot
+via `/api/v1/login` (the SDK and CLI only ever use API-token auth, never
+this login endpoint themselves — it's purely a test-fixture bootstrap
+step):
+
+```sh
+TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/login \
+    -H 'Content-Type: application/json' \
+    -d '{"email":"admin@email.com","password":"password"}' \
+  | jq -r '.data[0].token.token')
+IN_API_TOKEN="$TOKEN" IN_BASE_URL=http://localhost:8080/api/v1 \
+  cargo run -- clients list
+```
+
+`jq` is in this flake's `devShells.default` for exactly this. There's also
+an automated check (`checks.invoiceninja-cli` in `flake.nix`, backed by
+`tests/`) that boots the same kind of VM and runs this CLI's own binary
+against it non-interactively — see `tests/nixos-test.nix` for exactly what
+it exercises. Verified working end to end (boot → login → token →
+`clients create`/`list`) as of writing.
+
 ## Common commands
 
 ```sh

@@ -1,14 +1,32 @@
 {
   description = "invoiceninja-cli: a command-line client for the Invoice Ninja v5 API";
 
+  # Mirrors invoiceninja-nixos's own nixConfig: without this, building
+  # `nixosConfigurations.invoiceninja-test-*` here rebuilds the whole PHP/UI
+  # app (and its chromium-headless-shell closure) from source instead of
+  # pulling the cached result.
+  nixConfig = {
+    extra-substituters = [ "https://invoiceninja-nixos.cachix.org" ];
+    extra-trusted-public-keys = [
+      "invoiceninja-nixos.cachix.org-1:TmRZaji8FFVjjIw9KZmvLrxMxfP+JDThOyOX04z526A="
+    ];
+  };
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
+    # For a real Invoice Ninja instance to test the CLI against — see
+    # CLAUDE.md's "Testing against a real server". Not `follows`-ed to this
+    # flake's own `nixpkgs`: it pins its own (nixos-26.05, as of writing),
+    # and `nixosConfigurations.test-nginx`/`test-caddy` below are consumed
+    # as already-built flake outputs, not re-evaluated against our
+    # nixos-unstable — the two never need to agree.
+    invoiceninja-nixos.url = "git+ssh://gitea@gitea.awkawb.cloud/awkawb/invoiceninja-nixos.git";
   };
 
-  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, invoiceninja-nixos, ... }:
     let
       cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
 
@@ -60,7 +78,10 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          packages = [ rustToolchain pkgs.pkg-config pkgs.openssl ];
+          # jq is for parsing the /api/v1/login response when testing
+          # against a real server — see CLAUDE.md's "Testing against a
+          # real server".
+          packages = [ rustToolchain pkgs.pkg-config pkgs.openssl pkgs.jq ];
           RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
         };
 
@@ -73,6 +94,30 @@
           inherit (pkgs) lib pkg-config openssl;
           inherit rustPlatform;
         };
+
+        # Automated: boots a real Invoice Ninja instance (invoiceninja-nixos's
+        # module, not a mock) and runs actual `invoiceninja-cli` commands
+        # against it — create/list/get/update/delete across clients,
+        # invoices, and payments, including that `update` preserves fields
+        # it wasn't told about. `tests/` is a vendored, adapted copy of
+        # invoiceninja-nixos's own test scaffolding; see its
+        # nixos-test.nix for what it does and doesn't check (it
+        # deliberately skips things like PDF generation and the language-
+        # list regression, which are that repo's own concern, not this
+        # CLI's). Uses invoiceninja-nixos's own pinned nixpkgs (26.05), not
+        # this flake's nixos-unstable, to build+evaluate the VM/module —
+        # matches what that module was actually tested against. The CLI
+        # binary itself (`self.packages.${system}.default`, built against
+        # our own nixos-unstable) runs fine inside it regardless: Nix
+        # binaries carry their own closure, so differing nixpkgs revisions
+        # in the same system closure is an explicitly supported case, not a
+        # version mismatch to work around.
+        checks.invoiceninja-cli = import ./tests/nixos-test.nix {
+          nixpkgsPath = invoiceninja-nixos.inputs.nixpkgs;
+          inherit system;
+          invoiceninjaModule = invoiceninja-nixos.nixosModules.invoiceninja;
+          invoiceninjaCliPkg = self.packages.${system}.default;
+        };
       }) // {
       # For a flake that wants `invoiceninja-cli` in its own `pkgs`, not for
       # this flake's own `packages.default`/`devShells.default` above (those
@@ -84,6 +129,18 @@
       # pin along with it.
       overlays.default = final: _prev: {
         invoiceninja-cli = final.callPackage mkInvoiceninjaCli { };
+      };
+
+      # Real Invoice Ninja instances to test this CLI against, reusing
+      # invoiceninja-nixos's own test VMs as-is rather than redefining them
+      # here — same principle as this crate being a client of the SDK, not
+      # a second implementation of it. Known test credentials baked into
+      # that repo's tests/common.nix: admin@email.com / password (from
+      # tests/invoice_ninja_test_password). See CLAUDE.md for how to boot
+      # one and get an API token from it.
+      nixosConfigurations = {
+        invoiceninja-test-nginx = invoiceninja-nixos.nixosConfigurations.test-nginx;
+        invoiceninja-test-caddy = invoiceninja-nixos.nixosConfigurations.test-caddy;
       };
     };
 }

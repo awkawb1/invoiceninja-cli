@@ -161,7 +161,12 @@ pub struct ListArgs {
     pub sort: Option<String>,
     #[arg(long)]
     pub filter: Option<String>,
-    /// e.g. "active,archived,deleted" to include archived/deleted records
+    /// Restricts which records come back, e.g. "active" to exclude
+    /// archived/deleted ones. **Omitting this flag does not do that
+    /// filtering for you** — confirmed against a real server, `list` with
+    /// no `--status` returns every record regardless of `is_deleted`/
+    /// `archived_at`. Pass "active,archived,deleted" (or any subset) to
+    /// narrow it.
     #[arg(long)]
     pub status: Option<String>,
     /// Comma-separated relationships to eager-load, e.g. "contacts"
